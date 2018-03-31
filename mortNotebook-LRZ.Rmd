@@ -69,6 +69,8 @@ mortModel_nug <- km(formula = ~1,
                     nugget.estim=TRUE,
                     covtype="gauss",
                     optim.method="gen",
+                    # reduce max.generations and pop.size (10,10) to increase speed
+                    # at risk of getting stuck in local minima
                     control=list(max.generations=100,pop.size=100,wait.generations=8,
                                  solution.tolerance=1e-5))
 ```
@@ -709,7 +711,7 @@ for(yr in yearsForecast){
 # Long-range forecasts and comparison with APC models
 Next, we produce plots showing long range forecasts including backtesting the latest five years of data.  
 
-To obtain the same amount of years in fitting, we input mortality experience from 1994 to 1998, and then use 1994 to 2010 as the test set.  The public CDC database does not contain this data, so instead we use Human Mortality Database (HMD) data (for US males).  For comparison, we include a Lee-Carter Age-Period-Cohort model, fitted using the package **StMoMo**.  See Appendix B.2 in LRZ and corresponding figure 15. 
+To obtain the same amount of years in fitting, we input mortality experience from 1994 to 1998, and then use 1994 to 2010 as the test set.  The public CDC database does not contain this data, so instead we use Human Mortality Database (HMD) data (for US males).  For comparison, we include an Age-Period-Cohort model, fitted using the package **StMoMo**.  See Appendix B.2 in LRZ and corresponding figure 15. 
 
 ```{r load HMD}
 # import the HMD data
@@ -720,7 +722,7 @@ head(mortHMD)
 
 ```
 
-Next, fit the Lee-Carter and GP models
+Next, fit the APC and GP models
 
 ```{r results="hide",warning=FALSE,message=FALSE,error=FALSE}
 agesFit <- 50:84; yearsFit <- 1994:2009
@@ -778,7 +780,7 @@ xPred$m <- hmdPred$mean
 xPred$lower95 <- hmdPred$lower95-1.96*sqrt(nug_hmd)
 xPred$upper95 <- hmdPred$upper95+1.96*sqrt(nug_hmd)
 
-#Lee-Carter predictions
+#APC predictions
 LCratesHistoric <- predict(LCfit,
                            years=LCfit$years,
                            kt=c(LCfit$kt),
@@ -824,7 +826,7 @@ for(ag in agesForecast){
   
   points(yearsObserved,rateObserved,pch=16,cex=1.5)
   
-  legend("bottomleft", c("Lee-Carter", "GP", "Observed", "Lee-Carter 95% PI", 
+  legend("bottomleft", c("APC", "GP", "Observed", "APC 95% PI", 
                          "GP 95% CI"),
         cex=1.25, col=c("red","blue",1), lty=c(1,1,0,0,0),lwd=c(2,2,NA,0,0),
         pch=c(NA,NA,16,22,22),pt.bg=c(NA,NA,NA,"orange","skyblue"))
