@@ -69,8 +69,8 @@ mortModel_nug <- km(formula = ~1,
                     nugget.estim=TRUE,
                     covtype="gauss",
                     optim.method="gen",
-                    # reduce max.generations and pop.size (10,10) to increase speed
-                    # at risk of getting stuck in local minima
+                    # the "control" parameters below handle speed versus risk of
+                    # converging to local minima.  See "rgenoud" package for details
                     control=list(max.generations=100,pop.size=100,wait.generations=8,
                                  solution.tolerance=1e-5))
 ```
@@ -97,7 +97,7 @@ After constructing a **km** object, the main workhorse is the  **predict()** com
 
 ## In-sample Smoothing
 
-We beging with producing plots of estimated (smoothed) mortality rates for calendar year 2010 and ages 58--72.  We use the library **dplyr** for easier data handling.
+We begin with producing plots of estimated (smoothed) mortality rates for calendar year 2010 and ages 58--72.  We use the library **dplyr** for easier data handling.
 
 
 
@@ -169,8 +169,9 @@ mortPred <- predict(mortModel, newdata=data.frame(x=xPred),cov.compute=TRUE,
              se.compute=TRUE,type="UK")
 
 xPred$m <- mortPred$mean
-xPred$lower95 <- mortPred$lower95 - 1.96*sqrt(nug)  # predictive CI for y
-xPred$upper95 <- mortPred$upper95 + 1.96*sqrt(nug)
+y_sd = sqrt((mortPred$sd ^ 2) + nug)
+xPred$lower95  = mortPred$mean - 1.96 * y_sd # predictive CI for y
+xPred$upper95  = mortPred$mean + 1.96 * y_sd
 
 for(ageObs in agesForecast){
   rateObserved <- dplyr::filter(mortData, age == ageObs, year %in% yearsObserved)$rate
